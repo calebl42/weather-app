@@ -4,22 +4,32 @@ import { format } from "date-fns";
 let main = document.querySelector("main");
 let form = document.querySelector("form");
 
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  let formData = new FormData(form);
+  await getForecast(formData.get("search-query")).catch(() => {
+    let container = document.getElementById("container");
+    let errorMessage = document.createElement("p");
+    errorMessage.textContent = "Oops, looks like the place you searched up doesn't exist!";
+    container.appendChild(errorMessage);
+  });
+});
+
 async function getGifURL(conditions) {
   let response = await fetch(`https://api.giphy.com/v1/gifs/translate?api_key=A41YND7BF4hRpp7FCPckNKTPPeIh6PwL&s=${conditions}`);
   let gifData = await response.json();
 
-  console.log(gifData.data.images.original.url);
   return gifData.data.images.original.url;
 }
 
-async function getForecast() {
+async function getForecast(location) {
   let container = document.getElementById("container");
-  let response = await fetch("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/glasgow?unitGroup=us&key=YMF6J5AKTH37SASMXBXZBV84F&contentType=json");
+  container.innerHTML = "";
+  let response = await fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?unitGroup=us&key=YMF6J5AKTH37SASMXBXZBV84F&contentType=json`);
   let weatherData = await response.json();
-  console.log(weatherData);
 
   let addressElement = document.createElement("h1");
-  addressElement.textContent = `Weather for ${weatherData.resolvedAddress}`;
+  addressElement.textContent = weatherData.resolvedAddress;
   addressElement.id = "address";
 
   let datetimeElement = document.createElement("h2");
@@ -54,4 +64,4 @@ async function getForecast() {
   }
 }
 
-getForecast();
+await getForecast("los angeles");
